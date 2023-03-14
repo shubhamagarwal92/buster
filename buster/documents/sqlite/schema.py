@@ -40,12 +40,34 @@ SECTION_TABLE = r"""CREATE TABLE IF NOT EXISTS sections (
     section INTEGER,
     title TEXT NOT NULL,
     url TEXT NOT NULL,
-    content TEXT NOT NULL,
-    parent INTEGER,
-    type TEXT,
     PRIMARY KEY (version, source, section),
     FOREIGN KEY (source) REFERENCES versions (source),
     FOREIGN KEY (version) REFERENCES versions (version)
+)"""
+
+
+BLOCK_TABLE = r"""CREATE TABLE IF NOT EXISTS blocks (
+    source INTEGER,
+    version INTEGER,
+    section INTEGER,
+    sequence INTEGER,
+    type TEXT,
+    content TEXT NOT NULL,
+    PRIMARY KEY (version, source, section, sequence),
+    FOREIGN KEY (source, version, section) REFERENCES sections (source, version, section)
+)"""
+
+
+STRUCT_TABLE = r"""CREATE TABLE IF NOT EXISTS structure (
+    source INTEGER,
+    version INTEGER,
+    parent INTEGER,
+    section INTEGER,
+    sequence INTEGER,
+    depth INTEGER,
+    PRIMARY KEY (source, version, parent, section),
+    FOREIGN KEY (source, version, parent) REFERENCES sections (source, version, section),
+    FOREIGN KEY (source, version, section) REFERENCES sections (source, version, section)
 )"""
 
 
@@ -53,13 +75,14 @@ CHUNK_TABLE = r"""CREATE TABLE IF NOT EXISTS chunks (
     source INTEGER,
     version INTEGER,
     section INTEGER,
+    block INTEGER,
     chunking INTEGER,
-    sequence INTEGER,
+    position INTEGER,
     content TEXT NOT NULL,
     n_tokens INTEGER,
     embedding VECTOR,
-    PRIMARY KEY (source, version, section, chunking, sequence),
-    FOREIGN KEY (source, version, section) REFERENCES sections (source, version, section),
+    PRIMARY KEY (source, version, section, block, chunking, position),
+    FOREIGN KEY (source, version, section, position) REFERENCES blocks (source, version, section, sequence),
     FOREIGN KEY (source, version, chunking) REFERENCES chunkings (source, version, chunking)
 )"""
 
@@ -92,6 +115,8 @@ INIT_STATEMENTS = [
     VERSION_TABLE,
     CHUNKING_TABLE,
     SECTION_TABLE,
+    BLOCK_TABLE,
+    STRUCT_TABLE,
     CHUNK_TABLE,
     VERSION_VIEW,
     CHUNKING_VIEW,
@@ -131,3 +156,10 @@ def setup_db(connection: sqlite3.Connection):
     sqlite3.register_adapter(np.ndarray, adapt_vector)
     sqlite3.register_converter("vector", convert_vector)
     connection.create_function("sim", 2, cosine_similarity, deterministic=True)
+
+
+def open_db(db: str) -> sqlite3.Connection:
+    connection = sqlite3.connect(db, detect_types=sqlite3.PARSE_DECLTYPES)
+    setup_db(connection)
+    initialize_db(connection)
+    return connection
