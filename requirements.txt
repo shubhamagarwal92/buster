@@ -13,7 +13,7 @@ pinecone-client
 pymongo
 fastapi
 deeplake
-
+gradio
 # all openai[embeddings] deps, their list breaks our CI, see: https://github.com/openai/openai-python/issues/210 
 
 scikit-learn >= 1.0.2  # Needed for embedding utils, versions >= 1.1 require python 3.8
