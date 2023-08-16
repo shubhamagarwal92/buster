@@ -2,6 +2,8 @@ import cfg
 import gradio as gr
 import pandas as pd
 from cfg import setup_buster
+import pathlib
+import json
 
 buster = setup_buster(cfg.buster_cfg)
 
@@ -49,6 +51,12 @@ def chat(history):
         yield history, completion
 
 
+cur_dir = pathlib.Path(__file__).parent.resolve()
+file_path = f"{cur_dir}/examples.json"
+with open(file_path, "r", encoding="utf-8") as file:
+    json_obj = json.load(file)
+examples = json_obj["examples"]
+
 block = gr.Blocks(css="#chatbot .overflow-y-auto{height:500px}")
 
 with block:
@@ -60,23 +68,26 @@ with block:
     with gr.Row():
         question = gr.Textbox(
             label="What's your question?",
-            placeholder="Ask a question to AI stackoverflow here...",
+            placeholder="Ask a question to AI here...",
             lines=1,
         )
         submit = gr.Button(value="Send", variant="secondary").style(full_width=False)
 
     examples = gr.Examples(
-        examples=[
-            "How can I perform backpropagation?",
-            "How do I deal with noisy data?",
-            "How do I deal with noisy data in 2 words?",
-        ],
+        examples=examples,
         inputs=question,
-    )
+    ) # examples
+    # examples = [
+    #     "How can I perform backpropagation?",
+    #     "How do I deal with noisy data?",
+    #     "How do I deal with noisy data in 2 words?",
+    # ],
+    #
+
 
     gr.Markdown("This application uses GPT to search the docs for relevant info and answer questions.")
 
-    gr.HTML("️<center> Created with ❤️ by @jerpint and @hadrienbertrand")
+    gr.HTML("️<center> Created with ❤️")
 
     response = gr.State()
 
@@ -87,6 +98,9 @@ with block:
         chat, inputs=[chatbot], outputs=[chatbot, response]
     ).then(add_sources, inputs=[chatbot, response], outputs=[chatbot])
 
+file_path = f"{cur_dir}/auth.json"
+with open(file_path, "r", encoding="utf-8") as file:
+    config = json.load(file)
 
 block.queue(concurrency_count=16)
-block.launch(debug=True, share=False)
+block.launch(auth=(config["username"], config["pwd"]), debug=False, share=True)
