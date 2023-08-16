@@ -52,7 +52,7 @@ def chat(history):
 
 
 cur_dir = pathlib.Path(__file__).parent.resolve()
-file_path = f"{cur_dir}/examples.json"
+file_path = f"{cur_dir}/resources/examples.json"
 with open(file_path, "r", encoding="utf-8") as file:
     json_obj = json.load(file)
 examples = json_obj["examples"]
@@ -98,7 +98,7 @@ with block:
         chat, inputs=[chatbot], outputs=[chatbot, response]
     ).then(add_sources, inputs=[chatbot, response], outputs=[chatbot])
 
-file_path = f"{cur_dir}/auth.json"
+file_path = f"{cur_dir}/resources/auth.json"
 with open(file_path, "r", encoding="utf-8") as file:
     config = json.load(file)
 
