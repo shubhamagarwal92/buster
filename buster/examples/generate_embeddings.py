@@ -2,6 +2,7 @@ import pandas as pd
 from buster.documents_manager import DeepLakeDocumentsManager
 import argparse
 
+REQUIRED_COLUMNS = ["url", "title", "content", "source"]
 
 class EmbeddingGenerator:
     """
@@ -17,9 +18,10 @@ class EmbeddingGenerator:
     def generate_embeddings(self):
         # Read the csv
         df = pd.read_csv(self.csv_path)
-        # Generate the embeddings for our documents and store them in a deeplake format
-        dm = DeepLakeDocumentsManager(vector_store_path=self.vector_store_path, overwrite=True)
-        dm.add(df)
+        # initialize our vector store from scratch
+        dm = DeepLakeDocumentsManager(vector_store_path=self.vector_store_path, overwrite=True, required_columns=REQUIRED_COLUMNS)
+        # Generate the embeddings for our documents and store them to the deeplake store
+        dm.add(df, csv_checkpoint="embeddings.csv")
 
 
 def parse_args() -> argparse.Namespace:
@@ -30,14 +32,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-v",
         "--vector_store_path",
-        default="",
-        help="",
+        default="deeplake_store",
+        help="vector store",
     )
     parser.add_argument(
         "-c",
         "--csv_path",
-        default="",
-        help="",
+        default="stackoverflow.csv",
+        help="contains df produced by create_chunks",
     )
 
     args = parser.parse_args()
