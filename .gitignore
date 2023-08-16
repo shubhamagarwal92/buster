@@ -144,3 +144,7 @@ dmypy.json
 # VSCode
 .vscode/
 .idea/
+buster/examples/resources/docs_root_dir
+buster/examples/resources/auth.json
+buster/examples/resources/examples.json
+buster/examples/resources/output.csv
