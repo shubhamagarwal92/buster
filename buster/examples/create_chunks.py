@@ -26,6 +26,9 @@ class ChunkManager:
         # We could have mila-docs, slack-threads, office-hours, ...
         documents_df["source"] = self.source
 
+        if self.config.filter:
+            print(f"Choosing only 10 rows of the df as demo")
+            documents_df = documents_df[:10]
         # Save the chunks
         documents_df.to_csv(self.output_csv, index=False)
 
@@ -61,6 +64,13 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="",
     )
+    parser.add_argument(
+        "-f",
+        "--filter",
+        action='store_true',
+        help="",
+    )
+
 
     args = parser.parse_args()
     return args
