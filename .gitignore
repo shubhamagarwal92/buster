@@ -148,3 +148,4 @@ buster/examples/resources/docs_root_dir
 buster/examples/resources/auth.json
 buster/examples/resources/examples.json
 buster/examples/resources/output.csv
+buster/examples/deeplake_store
