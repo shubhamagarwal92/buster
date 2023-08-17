@@ -21,7 +21,8 @@ class EmbeddingGenerator:
         # initialize our vector store from scratch
         dm = DeepLakeDocumentsManager(vector_store_path=self.vector_store_path, overwrite=True, required_columns=REQUIRED_COLUMNS)
         # Generate the embeddings for our documents and store them to the deeplake store
-        dm.add(df, csv_checkpoint="embeddings.csv")
+        dm.add(df)
+        # dm.add(df, csv_checkpoint="embeddings.csv")
 
 
 def parse_args() -> argparse.Namespace:

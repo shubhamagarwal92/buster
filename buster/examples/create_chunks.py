@@ -43,32 +43,32 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-d",
         "--docs_dir",
-        default="",
-        help="",
+        default="docs.mila.quebec",
+        help="Docs in this directory are parsed",
     )
     parser.add_argument(
         "-b",
         "--base_url",
-        default="",
-        help="",
+        default="https://docs.mila.quebec/",
+        help="Used to create links",
     )
     parser.add_argument(
         "-o",
         "--output_csv",
-        default="",
-        help="",
+        default="resources/output.csv",
+        help="CSV where chunks are stored",
     )
     parser.add_argument(
         "-s",
         "--source",
-        default="",
-        help="",
+        default="mila",
+        help="Name of the source",
     )
     parser.add_argument(
         "-f",
         "--filter",
         action='store_true',
-        help="",
+        help="Filter the df for demo",
     )
 
     args = parser.parse_args()

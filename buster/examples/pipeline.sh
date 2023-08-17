@@ -30,8 +30,9 @@ export VECTOR_STORE_PATH="deeplake_store"
 export DOCS_ROOT_DIR="${RESOURCES_DIR}"/"docs_root_dir"
 # Get the dir name from base url
 DOCS_TO_PARSE_DIR=$( echo "${BASE_URL}" | cut -d'/' -f3 | cut -d':' -f1)
+# Navigate to docs dir to parse in the root directory
 export DOCS_DIR="${DOCS_ROOT_DIR}"/"${DOCS_TO_PARSE_DIR}"
-echo "Docs are parsed in only directory: ${DOCS_DIR}"
+
 
 if [ "${DO_HTTRACK}" == 1 ]; then
 httrack "$BASE_URL" -O "${RESOURCES_DIR}"/docs_root_dir
@@ -41,6 +42,8 @@ fi
 
 
 if [ "${DO_CHUNKS}" == 1 ]; then
+echo "Docs are parsed in only directory: ${DOCS_DIR}"
+
 python create_chunks.py \
 --docs_dir "${DOCS_DIR}" \
 --base_url "${BASE_URL}" \
@@ -61,6 +64,6 @@ fi
 
 
 if [ "${DO_GRADIO}" == 1 ]; then
-gradio gradio_app.py
+python gradio_app.py
 echo "App launched"
 fi

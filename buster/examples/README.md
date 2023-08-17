@@ -1,5 +1,8 @@
 # Example usage
 
+1. Create `examples.json` in the [resources](./resources/) which are shown on the gradio app. Sample examples [here](./resources/examples.sample.json)
+2. Create `auth.json` in the [resources](./resources/) which are used as credentials. Sample json [here](./resources/auth.sample.json)
+
 We can use this code when we already have the docs build locally. Then just point to the directory in [create_chunks.py](./create_chunks.py)
 
 We also allow scraping of the website using `httrack`.
@@ -89,6 +92,7 @@ We have provided a bash script to run the whole pipeline as
 ```
 bash pipeline.sh
 ```
+Follow the instructions on the terminal. 
 
 This would ideally call
 

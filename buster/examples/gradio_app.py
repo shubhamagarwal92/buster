@@ -4,8 +4,25 @@ import pandas as pd
 from cfg import setup_buster
 import pathlib
 import json
+import argparse
+from typing import Any
 
 buster = setup_buster(cfg.buster_cfg)
+
+
+def load_json(path: str) -> Any:
+    """
+    This function opens and JSON file path
+    and loads in the JSON file.
+
+    :param path: Path to JSON file
+    :type path: str
+    :return: the loaded JSON file
+    :rtype: dict
+    """
+    with open(path, "r",  encoding="utf-8") as file:
+        json_object = json.load(file)
+    return json_object
 
 
 def format_sources(matched_documents: pd.DataFrame) -> str:
@@ -51,56 +68,138 @@ def chat(history):
         yield history, completion
 
 
-cur_dir = pathlib.Path(__file__).parent.resolve()
-file_path = f"{cur_dir}/resources/examples.json"
-with open(file_path, "r", encoding="utf-8") as file:
-    json_obj = json.load(file)
-examples = json_obj["examples"]
+class GradioChatApp:
+    """
+    Class to define Gradio based chat app
+    """
 
-block = gr.Blocks(css="#chatbot .overflow-y-auto{height:500px}")
+    def __init__(self, config):
+        self.name = "GradioChatApp"
+        self.config = config        
 
-with block:
-    with gr.Row():
-        gr.Markdown("<h3><center>Buster 🤖: A Question-Answering Bot for your documentation</center></h3>")
+    def launch_app(self):
+        """
+        Gradio app defined here
+        """
+        # Close all apps running on servers
+        gr.close_all()
 
-    chatbot = gr.Chatbot()
+        examples = load_json(self.config.examples_json)["examples"]
 
-    with gr.Row():
-        question = gr.Textbox(
-            label="What's your question?",
-            placeholder="Ask a question to AI here...",
-            lines=1,
-        )
-        submit = gr.Button(value="Send", variant="secondary").style(full_width=False)
+        block = gr.Blocks(css="#chatbot .overflow-y-auto{height:500px}")
 
-    examples = gr.Examples(
-        examples=examples,
-        inputs=question,
-    ) # examples
-    # examples = [
-    #     "How can I perform backpropagation?",
-    #     "How do I deal with noisy data?",
-    #     "How do I deal with noisy data in 2 words?",
-    # ],
-    #
+        with block:
+            with gr.Row():
+                gr.Markdown(f"<h3><center>{self.config.title}</center></h3>")
+
+            chatbot = gr.Chatbot()
+
+            with gr.Row():
+                question = gr.Textbox(
+                    label="What's your question?",
+                    placeholder="Ask a question to AI here...",
+                    lines=1,
+                )
+                submit = gr.Button(value="Send", variant="secondary").style(full_width=False)
+
+            examples = gr.Examples(
+                examples=examples,
+                inputs=question,
+            ) 
+
+            gr.Markdown("This application uses GPT to search the docs for relevant info and answer questions.")
+
+            gr.HTML(f"️<center> Created with ❤️ by {self.config.app_by}")
+
+            response = gr.State()
+
+            submit.click(user, [question, chatbot], [question, chatbot], queue=False).then(
+                chat, inputs=[chatbot], outputs=[chatbot, response]
+            ).then(add_sources, inputs=[chatbot, response], outputs=[chatbot])
+            question.submit(user, [question, chatbot], [question, chatbot], queue=False).then(
+                chat, inputs=[chatbot], outputs=[chatbot, response]
+            ).then(add_sources, inputs=[chatbot, response], outputs=[chatbot])
+
+        kwargs = {}
+        if self.config.use_auth:
+            creds = load_json(self.config.auth_json)
+            kwargs = {"auth": (creds["username"], creds["pwd"])}
+        if self.config.share:
+            kwargs["share"] = True
+        if self.config.use_diff_server:
+            kwargs["server_name"] = self.config.server_name
+            kwargs["server_port"] = self.config.server_port
+            print(f"Hosting on {self.config.server_name}:{self.config.server_port}")
+
+        block.queue(concurrency_count=16)
+        block.launch(**kwargs)
 
 
-    gr.Markdown("This application uses GPT to search the docs for relevant info and answer questions.")
+def parse_args() -> argparse.Namespace:
+    """
+    Argument parser function
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-e",
+        "--examples_json",
+        default="resources/examples.json",
+        help="Examples to show on gradio app",
+    )
+    parser.add_argument(
+        "-ua",
+        "--use_auth",
+        action='store_false',
+        help="Use the auth credentials",
+    ) # Default true
+    parser.add_argument(
+        "-a",
+        "--auth_json",
+        default="resources/auth.json",
+        help="Credentials used",
+    )
+    parser.add_argument(
+        "-us",
+        "--use_diff_server",
+        action='store_true',
+        help="Host on different server name. Provide server name and port as the args",
+    ) # Default false
+    parser.add_argument(
+        "-s",
+        "--server_name",
+        default="0.0.0.0",
+        help="Server name to host on",
+    )
+    parser.add_argument(
+        "-p",
+        "--server_port",
+        default=8800,
+        help="Port to host gradio app on",
+    ) 
+    parser.add_argument(
+        "-sh",
+        "--share",
+        action='store_true',
+        help="Share using gradio link",
+    ) # Default false
+    parser.add_argument(
+        "-t",
+        "--title",
+        default='Buster 🤖: A Question-Answering Bot for your documentation',
+        help="Title shown",
+    )
+    parser.add_argument(
+        "-b",
+        "--app_by",
+        default='@jerpint and @hadrienbertrand',
+        help="Created with love by",
+    )
 
-    gr.HTML("️<center> Created with ❤️")
+    args = parser.parse_args()
+    return args
 
-    response = gr.State()
 
-    submit.click(user, [question, chatbot], [question, chatbot], queue=False).then(
-        chat, inputs=[chatbot], outputs=[chatbot, response]
-    ).then(add_sources, inputs=[chatbot, response], outputs=[chatbot])
-    question.submit(user, [question, chatbot], [question, chatbot], queue=False).then(
-        chat, inputs=[chatbot], outputs=[chatbot, response]
-    ).then(add_sources, inputs=[chatbot, response], outputs=[chatbot])
-
-file_path = f"{cur_dir}/resources/auth.json"
-with open(file_path, "r", encoding="utf-8") as file:
-    config = json.load(file)
-
-block.queue(concurrency_count=16)
-block.launch(auth=(config["username"], config["pwd"]), debug=False, share=True)
+if __name__ == "__main__":
+    parsed_args = parse_args()
+    test_app = GradioChatApp(parsed_args)
+    test_app.launch_app()
