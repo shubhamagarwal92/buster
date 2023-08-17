@@ -50,6 +50,7 @@ supported_docs = {
 
 def get_document(
     filepath: str,
+    filename: str,
     base_url: str,
     parser_cls: Type[Parser],
     min_section_length: int = 100,
@@ -63,7 +64,7 @@ def get_document(
     with open(filepath, "r") as f:
         source = f.read()
 
-    filename = Path(filepath).name
+    # filename = Path(filepath).name
     soup = BeautifulSoup(source, "html.parser")
     parser = parser_cls(soup, base_url, filename, min_section_length, max_section_length)
 
@@ -98,7 +99,8 @@ def get_all_documents(
     for file in files:
         try:
             filepath = os.path.join(root_dir, file)
-            df = get_document(filepath, base_url, parser_cls, min_section_length, max_section_length)
+            # df = get_document(filepath, base_url, parser_cls, min_section_length, max_section_length)
+            df = get_document(filepath, file, base_url, parser_cls, min_section_length, max_section_length)
             dfs.append(df)
         except:
             print(f"Skipping {filepath}...")
